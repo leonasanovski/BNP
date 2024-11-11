@@ -1,0 +1,53 @@
+/*1.Најди ги имињата на сите студенти кои биле запишани (enroll) на барем еден
+курс во зимскиот семестар 2020 (WiSe 2020).
+
+πName(σQuarter='WiSe 2020'(ENROLL⨝STUDENT))*/
+
+/*2.Најди ги насловите на сите книги чиј автор е Neumann или Blum и кои биле
+препорачани на курс од областа информатика (Informatik).
+
+knigi= (σAuthor='Neumann'(BOOK)) ∪ (σAuthor='Blum'(BOOK))
+πBook_Title(σDept='Informatik'((knigi⨝BOOK_RECOMMENDATION)⨝COURSE))*/
+
+/*3. Најди ги имињата на сите студенти кои студираат Medieninformatik и во
+зимскиот семестар 2020 имале оценка поголема од 60 и помала од 80 на некој
+курс од областа Informatik.
+
+πName(σQuarter='WiSe 2020'(σGrade>60∧Grade<80(σMajor='Medieninformatik'(STUDENT⨝ENROLL))))*/
+
+/*4. За секој курс, најди ја просечната оценка на студентите во зимскиот семестар
+2020.
+
+tmp= γCourseId;AVG(Grade)→avg_grade(σQuarter='WiSe 2020'(COURSE⨝ENROLL))
+tmp⨝COURSE*/
+
+/*5. Најди ги сите курсеви кои се од областа Medien или на кои била препорачана
+книгата Workshop Javascript.
+
+medien= σDept='Medien'(COURSE)
+preporacana_kniga= πCourseId,Cname,Dept(σBook_Title='Workshop Javascript'((BOOK⨝BOOK_RECOMMENDATION)⨝COURSE))
+medien∪preporacana_kniga*/
+
+/*6. Најди ги имињата на студентите со највисока и најниска просечна оценка
+(просечната оценка е просекот на оценките на сите курсеви на кои бил запишан
+студентот).
+
+SITE = γSSN; AVG(Grade) → prosecni_ocenki (ENROLL) ⨝ STUDENT
+max= πName((γ; max(prosecni_ocenki) → prosecni_ocenki (SITE))⨝SITE)
+min= πName((γ; min(prosecni_ocenki) → prosecni_ocenki (SITE))⨝SITE)
+min∪max*/
+
+/*дополнително барање од ГОЧ - 1
+inform za site studenti sto studiraat Medientechnik i slusale nekoj kurs od oblasta Design
+
+dizajn= πSSN,Name,Major,Bdate(((σDept='Design'(COURSE))⨝ENROLL)⨝STUDENT)
+medientehnik= σMajor='Medientechnik'(STUDENT)
+medientehnik∪dizajn*/
+
+/*дополнително барање од ГОЧ - 2
+site studenti kloi ne slusale kursevi od oblasta Informatik
+
+site= (STUDENT⨝ENROLL)⨝COURSE
+slusale_informatik= σDept='Informatik'(site)
+πSSN,Name,Major,Bdate(site-slusale_informatik)
+*/
