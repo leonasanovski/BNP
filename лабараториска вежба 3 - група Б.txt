@@ -1,0 +1,111 @@
+IF (SELECT COUNT(*) FROM sys.databases WHERE name = 'db_LABARATORISKA_1') = 0
+BEGIN
+    -- Create the database if it doesn't exist
+    CREATE DATABASE db_LABARATORISKA_1;
+    PRINT 'Database created: db_LABARATORISKA_1';
+END
+ELSE
+BEGIN
+    PRINT 'Database already exists: db_LABARATORISKA_1';
+END
+
+GO
+-- Use the database
+USE db_second_exercise;
+
+-- Step 1: Drop all foreign key constraints if any exist
+IF EXISTS (SELECT * FROM sys.foreign_keys)
+BEGIN
+    DECLARE @sql NVARCHAR(MAX);
+    SET @sql = '';
+
+    SELECT @sql = @sql + 'ALTER TABLE [' + OBJECT_NAME(parent_object_id) 
+                 + '] DROP CONSTRAINT [' + name + '];' + CHAR(13)
+    FROM sys.foreign_keys;
+
+    EXEC sp_executesql @sql;
+    PRINT 'Foreign keys dropped';
+END
+ELSE
+BEGIN
+    PRINT 'No foreign keys to drop';
+END
+
+-- Step 2: Drop all tables if any exist
+IF EXISTS (SELECT * FROM sys.tables)
+BEGIN
+    SET @sql = '';
+
+    SELECT @sql = @sql + 'DROP TABLE [' + name + '];' + CHAR(13)
+    FROM sys.tables;
+
+    EXEC sp_executesql @sql;
+    PRINT 'Tables dropped';
+END
+ELSE
+BEGIN
+    PRINT 'No tables to drop';
+END
+
+
+CREATE TABLE Korisnik (
+	k_ime VARCHAR(50) PRIMARY KEY,
+	ime TEXT,
+	prezime VARCHAR(30),
+	tip VARCHAR(20),
+	pretplata INT,
+	datum_reg DATE,
+	tel_broj NVARCHAR(12),
+	email VARCHAR(30),
+	CONSTRAINT check_date_korisnik CHECK(datum_reg >= '2023-01-01' AND datum_reg <= '2024-12-31')
+);
+CREATE TABLE Premium_korisnik(
+	k_ime VARCHAR(50) PRIMARY KEY,
+	datum DATE,
+	procent_popust INT DEFAULT 20,
+	CONSTRAINT fk_korisnik FOREIGN KEY (k_ime) REFERENCES Korisnik(k_ime) ON DELETE CASCADE ON UPDATE CASCADE
+);
+CREATE TABLE Profil(
+	k_ime VARCHAR(50),
+	ime VARCHAR(50),
+	datum DATE,
+	CONSTRAINT pk_profil PRIMARY KEY(k_ime,ime),
+	CONSTRAINT fk_korisnik_premium FOREIGN KEY (k_ime) REFERENCES Korisnik(k_ime) ON DELETE CASCADE ON UPDATE CASCADE
+);
+CREATE TABLE Video_zapis(
+	naslov VARCHAR(50) PRIMARY KEY,
+	jazik VARCHAR(30) DEFAULT 'English',
+	vremetraenje INT,
+	datum_d DATE,
+	datum_p DATE,
+	CONSTRAINT check_date_Video_zapis CHECK(datum_d >= datum_p)
+);
+CREATE TABLE Video_zapis_zanr(
+	naslov VARCHAR(50),
+	zanr VARCHAR(30),
+	CONSTRAINT pk_Video_zapis_zanr PRIMARY KEY(naslov,zanr),
+	CONSTRAINT fk_Video_zapis FOREIGN KEY (naslov) REFERENCES Video_zapis(naslov) ON DELETE CASCADE ON UPDATE CASCADE
+);
+CREATE TABLE Lista_zelbi(
+	naslov VARCHAR(50),
+	k_ime VARCHAR(50),
+	ime VARCHAR(50),
+	CONSTRAINT pk_Lista_zelbi PRIMARY KEY(naslov,k_ime,ime),
+	CONSTRAINT fk_Video_zapis_LZ FOREIGN KEY (naslov) REFERENCES Video_zapis(naslov) ON DELETE CASCADE ON UPDATE CASCADE,
+	CONSTRAINT fk_Profil FOREIGN KEY (k_ime,ime) REFERENCES Profil(k_ime,ime) ON DELETE CASCADE ON UPDATE CASCADE
+);
+
+CREATE TABLE Preporaka (
+    ID VARCHAR(50) PRIMARY KEY,
+    k_ime_od VARCHAR(50),
+    k_ime_na VARCHAR(50),
+    naslov VARCHAR(50) DEFAULT 'Deleted',
+    datum DATE,
+    komentar VARCHAR(250),
+    ocena INT,
+    CONSTRAINT fk_korisnik_preporaka_od FOREIGN KEY (k_ime_od) REFERENCES Korisnik(k_ime),
+    CONSTRAINT fk_korisnik_preporaka_na FOREIGN KEY (k_ime_na) REFERENCES Korisnik(k_ime),
+    CONSTRAINT fk_video_zapis_preporaka FOREIGN KEY (naslov) REFERENCES Video_zapis(naslov),
+    CONSTRAINT check_ocena CHECK (ocena >= 1 AND ocena <= 5),
+    CONSTRAINT check_date_preporaka CHECK (datum >= '2022-12-07')
+);
